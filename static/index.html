@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>G-Tooling</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="header-top">
+      <h1>G-Tooling</h1>
+      <span id="status" class="status"></span>
+      <div class="header-auth">
+        <button id="adminLoginBtn" type="button" class="btn-secondary">Admin Login</button>
+        <button id="adminLogoutBtn" type="button" class="btn-secondary hidden">Logout</button>
+        <button id="changePwBtn" type="button" class="btn-secondary hidden">Change Password</button>
+      </div>
+    </div>
+    <div class="db-bar hidden" id="dbBar">
+      <label for="dbPath">DB Path</label>
+      <input id="dbPath" type="text" placeholder="/path/to/tooling.db" />
+      <button id="openDbBtn" type="button">Open DB</button>
+      <button id="createDbBtn" type="button" class="btn-secondary">Create New</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT: Tool List -->
+    <section class="col col-list">
+      <div class="col-head">
+        <h2>Tools</h2>
+        <div class="col-actions">
+          <button id="newToolBtn" type="button" class="hidden">New</button>
+          <button id="editBtn" type="button" class="hidden" disabled>Edit</button>
+          <button id="deleteBtn" type="button" class="btn-danger hidden" disabled>Delete</button>
+          <button id="cancelBtn" type="button" class="btn-secondary hidden">Cancel</button>
+          <button id="saveBtn" type="button" class="hidden">Save</button>
+        </div>
+      </div>
+
+      <div class="list-wrap">
+        <table id="toolsTable">
+          <thead>
+            <tr>
+              <th data-sort="number" class="sortable sort-active"># <span class="sort-arrow">▲</span></th>
+              <th data-sort="name" class="sortable">Name <span class="sort-arrow"></span></th>
+              <th>Dia</th>
+              <th>Color</th>
+              <th>Active</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="tool-image" id="toolImage">
+        <button type="button" class="image-gear hidden" id="imageUploadBtn" title="Upload image">&#9881;</button>
+        <div class="image-placeholder" id="imagePlaceholder">No Image</div>
+        <img id="toolImg" class="hidden" alt="Tool" />
+        <input type="file" id="imageFileInput" accept="image/*" class="hidden" />
+      </div>
+    </section>
+
+    <!-- RIGHT: Detail -->
+    <section class="col col-detail">
+      <!-- Top bar: #Number | Name | Save -->
+      <div class="detail-head">
+        <span class="detail-title" id="detailTitle">—</span>
+        <div class="detail-head-right">
+        </div>
+      </div>
+
+      <!-- Two columns: Info | Speeds & Feeds -->
+      <div class="detail-split">
+        <!-- Info -->
+        <div class="detail-pane detail-info">
+          <fieldset class="group-box">
+            <legend>General</legend>
+            <div class="field">
+              <label for="f_number">Tool Number</label>
+              <input id="f_number" type="number" min="100" max="999" step="1" disabled />
+            </div>
+            <div class="field">
+              <label><input id="f_active" type="checkbox" disabled /> Active</label>
+            </div>
+            <div class="field">
+              <label for="f_name">Name</label>
+              <input id="f_name" type="text" disabled />
+            </div>
+            <div class="field">
+              <label for="f_diameter">Diameter</label>
+              <input id="f_diameter" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_color">Color</label>
+              <input id="f_color" type="color" value="#6ba4ff" disabled />
+            </div>
+            <div class="field">
+              <label for="f_storePos">Store Pos</label>
+              <input id="f_storePos" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_dCorrector">D Corrector</label>
+              <input id="f_dCorrector" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_comment">Comment</label>
+              <textarea id="f_comment" rows="3" disabled></textarea>
+            </div>
+          </fieldset>
+
+          <fieldset class="group-box">
+            <legend>Flutes</legend>
+            <div class="field">
+              <label for="f_flutesType">Type</label>
+              <select id="f_flutesType" disabled>
+                <option value="">None</option>
+                <option value="upcut">Upcut</option>
+                <option value="downcut">Downcut</option>
+                <option value="straight">Straight</option>
+                <option value="compression">Compression</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f_flutesNum">Num</label>
+              <input id="f_flutesNum" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_flutesLength">Length</label>
+              <input id="f_flutesLength" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_flutesCoating">Coating</label>
+              <select id="f_flutesCoating" disabled>
+                <option value="">None</option>
+                <option value="AlTiN">AlTiN</option>
+                <option value="DLC">DLC</option>
+              </select>
+            </div>
+          </fieldset>
+
+          <fieldset class="group-box">
+            <legend>Machining</legend>
+            <div class="field">
+              <label><input id="f_canPlunge" type="checkbox" disabled /> Can Plunge</label>
+            </div>
+            <div class="field">
+              <label for="f_maxDepth">Max Depth</label>
+              <input id="f_maxDepth" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_maxWorkingDepth">Max Working Depth</label>
+              <input id="f_maxWorkingDepth" type="number" min="0" step="1" disabled />
+            </div>
+            <div class="field">
+              <label for="f_depthPerPass">Depth/Pass</label>
+              <input id="f_depthPerPass" type="number" min="0" step="1" disabled />
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Speeds & Feeds -->
+        <div class="detail-pane detail-feeds">
+          <div class="feeds-split">
+            <!-- Capabilities -->
+            <div class="feeds-cap-col">
+              <h3>Capabilities</h3>
+              <div id="capList" class="cap-list"></div>
+            </div>
+            <!-- Rates -->
+            <div class="feeds-rates-col">
+              <div class="rates-section">
+                <h3>Default</h3>
+                <div class="rates-row">
+                  <label>Speed <input id="r_speed" type="number" min="0" step="100" disabled /></label>
+                  <label>Feed <input id="r_feed" type="number" min="0" step="100" disabled /></label>
+                  <label>Plunge <input id="r_plunge" type="number" min="0" step="100" disabled /></label>
+                  <label>Ramp <input id="r_ramp" type="number" min="0" step="100" disabled /></label>
+                </div>
+              </div>
+              <div id="jobRates" class="job-rates"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Image overlay -->
+  <div id="imageOverlay" class="overlay hidden">
+    <div class="overlay-content">
+      <img id="overlayImg" src="" alt="Tool" />
+      <button id="overlayClose" type="button">&times;</button>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
