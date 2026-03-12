@@ -301,6 +301,17 @@ def init_db() -> None:
 
             if ver < 2:
                 migrate_v1_to_v2(conn)
+            else:
+                # Defensive self-heal for DBs that report v2 but are missing columns.
+                cursor = conn.execute("PRAGMA table_info(tools)")
+                existing_cols = {row["name"] for row in cursor.fetchall()}
+                for col_name, col_def in V2_COLUMNS:
+                    if col_name not in existing_cols:
+                        conn.execute(f"ALTER TABLE tools ADD COLUMN {col_name} {col_def}")
+
+        # Ensure all non-tools schema objects exist for partially migrated DBs.
+        conn.executescript(SCHEMA_SQL)
+        conn.execute("INSERT OR REPLACE INTO schema_version(version) VALUES (2)")
 
         # Seed job types
         seed_codes = {code for code, _ in SEED_JOB_TYPES}
