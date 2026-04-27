@@ -4,6 +4,7 @@ import os
 import sqlite3
 import threading
 from datetime import datetime, timezone
+from email.utils import format_datetime, parsedate_to_datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -772,6 +773,51 @@ class AppHandler(BaseHTTPRequestHandler):
         if path == "/api/tools":
             with db_connect() as conn:
                 return self.send_json(HTTPStatus.OK, {"tools": fetch_tool_list(conn)})
+
+        if path == "/api/tools.db":
+            # Raw SQLite file download. G-NodeCAM clients pull this on
+            # startup and cache locally; ToolLibrary then imports from the
+            # local file. Conditional GET (If-Modified-Since) avoids
+            # re-shipping the same bytes when nothing changed.
+            db_path_str = get_db_path()
+            if not db_path_str:
+                self.send_response(HTTPStatus.NOT_FOUND)
+                self.end_headers()
+                return
+            db_file = Path(db_path_str)
+            if not db_file.exists():
+                self.send_response(HTTPStatus.NOT_FOUND)
+                self.end_headers()
+                return
+            try:
+                stat = db_file.stat()
+                mtime_dt = datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc)
+                last_modified = format_datetime(mtime_dt, usegmt=True)
+
+                ims = self.headers.get("If-Modified-Since")
+                if ims:
+                    try:
+                        ims_dt = parsedate_to_datetime(ims)
+                        # 1-second tolerance — HTTP dates have 1s resolution.
+                        if mtime_dt.timestamp() <= ims_dt.timestamp() + 1:
+                            self.send_response(HTTPStatus.NOT_MODIFIED)
+                            self.send_header("Last-Modified", last_modified)
+                            self.end_headers()
+                            return
+                    except (TypeError, ValueError):
+                        pass  # malformed header — fall through to full response
+
+                data = db_file.read_bytes()
+                self.send_response(HTTPStatus.OK)
+                self.send_header("Content-Type", "application/octet-stream")
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Last-Modified", last_modified)
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+                self.wfile.write(data)
+            except OSError as e:
+                self.send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(e)})
+            return
 
         if path.startswith("/api/tools/") and path.endswith("/image"):
             try:
