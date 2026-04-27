@@ -150,8 +150,16 @@ def load_settings() -> dict:
         return {}
     try:
         return json.loads(SETTINGS_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
+    except (OSError, json.JSONDecodeError) as e:
+        # Don't silently swallow — a fallback to {} would let the next
+        # save_settings overwrite the file with whatever single key the
+        # caller is setting (e.g., dbPath at startup), permanently
+        # losing adminPassword and any other keys. Surface the failure
+        # so an operator can investigate the corrupt file.
+        raise RuntimeError(
+            f"settings.json is unreadable ({e!s}). Refusing to continue and "
+            f"overwrite — fix or remove the file at {SETTINGS_PATH}"
+        ) from e
 
 
 def get_admin_password() -> str:
@@ -166,10 +174,16 @@ def set_admin_password(new_password: str) -> None:
 
 def save_settings(data: dict) -> None:
     SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    SETTINGS_PATH.write_text(
+    # Atomic write: a partial write to settings.json could corrupt JSON,
+    # which previously caused load_settings() to return {} and the next
+    # save to wipe other keys (notably adminPassword). Writing to a temp
+    # file first and renaming is atomic on POSIX.
+    tmp = SETTINGS_PATH.with_suffix(SETTINGS_PATH.suffix + ".tmp")
+    tmp.write_text(
         json.dumps(data, ensure_ascii=True, separators=(",", ":")),
         encoding="utf-8",
     )
+    os.replace(tmp, SETTINGS_PATH)
 
 
 def normalize_db_path(value: str) -> str:
