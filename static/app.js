@@ -55,6 +55,7 @@ const fields = {
   flutesNum: $('#f_flutesNum'),
   flutesLength: $('#f_flutesLength'),
   flutesCoating: $('#f_flutesCoating'),
+  aliases: $('#f_aliases'),
   storePos: $('#f_storePos'),
   dCorrector: $('#f_dCorrector'),
   flutesType: $('#f_flutesType'),
@@ -309,6 +310,7 @@ function clearForm() {
   fields.name.value = '';
   fields.diameter.value = '';
   fields.color.value = '#6ba4ff';
+  fields.aliases.value = '';
   fields.storePos.value = '';
   fields.dCorrector.value = '';
   fields.comment.value = '';
@@ -345,6 +347,7 @@ function populateForm(t) {
   fields.name.value = t.name;
   fields.diameter.value = f2(t.diameter);             // double
   fields.color.value = t.color || '#6ba4ff';
+  fields.aliases.value = t.aliases || '';
   fields.storePos.value = t.storePos || '';           // int
   fields.dCorrector.value = t.dCorrector || '';       // int
   fields.comment.value = t.comment || '';
@@ -424,6 +427,7 @@ function collectPayload() {
     color: fields.color.value,
     canPlunge: fields.canPlunge.checked,
     active: fields.active.checked,
+    aliases: fields.aliases.value.trim(),
     storePos: Number(fields.storePos.value) || 0,
     dCorrector: Number(fields.dCorrector.value) || 0,
     comment: fields.comment.value.trim(),
